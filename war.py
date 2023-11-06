@@ -1,5 +1,7 @@
+import re
 import whois
 import requests
+import subprocess
 
 import dns.zone
 import dns.resolver
@@ -18,7 +20,7 @@ from colorama import init, Fore, Style
 # 4) Check if WORDLIST is readable and display error if not
 
 URL = "http://192.168.1.2"
-URL = "http://ZoneTransfer.me"
+URL = "https://happy-sailors.com"
 EXTS = "zip,bz2,tar,gz,tgz,tar.bz2,tar.gz,old,bak,inc,ini,xml,txt,yaml,yml,conf,cnf,config,json".split(",")
 WORDLIST = ""
 
@@ -69,6 +71,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     ########################################################################################
     # WHOIS
     ########################################################################################
+    """
     print_info("WHOIS:")
     print_info("="*48)
 
@@ -97,11 +100,13 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
     print_info(out)
     print_info()
+    """
 
 
     ########################################################################################
     # Get DNS data
     ########################################################################################
+    """
     print_info("DNS:")
     print_info("="*48)
     entries = ["A", "A6", "AAAA", "AFSDB", "ANY", "APL", "AXFR", "CAA", "CDNSKEY", "CDS", "CERT", "CNAME", "CSYNC", "DHCID", "DLV", "DNAME", "DNSKEY", "DS", "EUI48", "EUI64", "GPOS", "HINFO", "HIP", "IPSECKEY", "ISDN", "IXFR", "KEY", "KX", "LOC", "MAILA", "MAILB", "MB", "MD", "MF", "MG", "MINFO", "MR", "MX", "NAPTR", "NONE", "NS", "NSAP", "NSAP-PTR", "NSEC", "NSEC3", "NSEC3PARAM", "NULL", "NXT", "OPT", "PTR", "PX", "RP", "RRSIG", "RT", "SIG", "SOA", "SPF", "SRV", "SSHFP", "TA", "TKEY", "TLSA", "TSIG", "TXT", "UNSPEC", "URI", "WKS", "X25"]
@@ -122,11 +127,13 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
             print_info()
     
     print_info()
+    """
     
 
     ########################################################################################
     # Get DNS zonetransfer
     ########################################################################################
+    """
     print_info("DNS ZONETRANSFER:")
     print_info("="*48)
 
@@ -145,16 +152,18 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
             except Exception as e:
                 print_found(f"[+] NS {server} REFUSED ZONE TRANSFER")
                 continue
+    """
 
 
     ########################################################################################
     # Banner grabbing - check for Server or other inform. desclosure - e.g.: PHP version
     ########################################################################################
+    """
     print_info("HTTP HEADER INFORMATION:")
     print_info("="*48)
     r = session.get(URL)
     for header in r.headers.keys():
-        inform_disc_headers = ["Server", "Set-Cookie"]
+        inform_disc_headers = ["Server", "Set-Cookie", "X-Powered-By"]
         sec_headers = ["Strict-Transport-Security", "Cache-Control", "Set-Cookie", "Content-Security-Policy"]
         info_headers = ["Content-Type", "Transfer-Encoding", "Content-Encoding"]
 
@@ -179,11 +188,13 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
                 print_info(f"[*] INFO:               {elem}: {r.headers[elem]}")
     
     print_info()
+    """
 
 
     ########################################################################################
     # Get SSL cert subdomain list
     ########################################################################################
+    """
     print_info("SUBDOMAINS:")
     print_info("="*48)
 
@@ -211,7 +222,59 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
     else:
         print_error("[-] ERROR - COULD NOT GET SSL CERTIFICATE LIST")
+    """
 
+
+    ########################################################################################
+    # Using whatweb to get the techn. stack
+    ########################################################################################
+    print_info("WEB TECHNOLOGIES:")
+    print_info("="*48)
+
+    inform_disc_headers = ["Server", "Set-Cookie", "X-Powered-By", "JQuery", "Script", "WordPress", "PoweredBy", "MetaGenerator"]
+    sec_headers = ["Strict-Transport-Security", "Content-Security-Policy", "X-XSS-Protection", "HttpOnly"]
+
+    try:
+        res = subprocess.check_output(["whatweb", domain], stderr=subprocess.STDOUT)
+        
+        # Find starting point
+        lines = res.decode("UTF-8").strip().split("\n")
+        for i in range(len(lines)):
+            if "200 OK" in lines[i]:
+                start = i
+        
+        # Remove warnings and redirection messages
+        lines = lines[start:]
+        lines = "\n".join(lines)
+
+        # Remove color informations
+        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        lines = ansi_escape.sub('', lines)
+
+        # Format output
+        lines = lines.split(", ")
+        print_info(lines[0])
+        for line in lines[1:]:
+            try:
+                for entry in inform_disc_headers:
+                    if entry.lower() in line.lower():
+                        print_error("  [-] " + line.replace("[", ": ").replace("]", ""))
+                        raise(IndexError)
+
+                for entry in sec_headers:
+                    if entry.lower() in line.lower():
+                        print_found("  [+] " + line.replace("[", ": ").replace("]", ""))
+                        raise(IndexError)
+
+            except IndexError:
+                continue
+            
+            print_info("  [*] " + line.replace("[", ": ").replace("]", ""))
+
+    except FileNotFoundError:
+        print_error("[-] whatweb NOT INSTALLED")
+
+    print_info()
 
 
     ########################################################################################
