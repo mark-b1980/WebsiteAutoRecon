@@ -10,7 +10,7 @@ from colorama import init, Fore, Style
 ########################################################################################
 
 # TODO: 
-# 1) Check of 2 arguments are given and print usage is not
+# 1) Check of 2 arguments are given and print usage if not
 # 2) Check for -h or --help in arguments
 # 3) Set URL and WORDLIST to the according values
 # 4) Check if WORDLIST is readable and display error if not
@@ -70,8 +70,30 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     print_info("WHOIS:")
     print_info("="*48)
 
+    # Prettify output
     whois_info = str(whois.whois(domain))
-    print_info(whois_info)
+    whois_info = whois_info.replace("{", "").replace("}", "")
+    whois_info = whois_info.replace("[", "").replace("]", "")
+    whois_info = whois_info.replace("\"", "").replace(",\n", "\n")
+    whois_info = whois_info.lstrip()
+
+    out = ""
+    for line in whois_info.split("\n"):
+        line = line.lstrip()
+
+        # Format headline
+        if ": " in line:
+            tmp = line.split(":")
+            tmp[0] = tmp[0].upper() + ":"
+            line = f"{tmp[0]:30}{tmp[1]}"
+        
+        # Indention by 2 spaces if there is no headline
+        else:
+            line = "  " + line
+        
+        out += line + "\n"
+
+    print_info(out)
     print_info()
 
     ########################################################################################
@@ -90,14 +112,14 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
             if header.lower() == elem.lower():
                 if elem == "Set-Cookie" and "httponly" in r.headers[elem].lower():
                     continue
-                print_found(f"[+] INFORM. DISCLOSURE: {elem}: {r.headers[elem]}")
+                print_error(f"[-] INFORM. DISCLOSURE: {elem}: {r.headers[elem]}")
 
         # Secure Settings
         for elem in sec_headers:
             if header.lower() == elem.lower():
                 if elem == "Set-Cookie" and not ("httponly" in r.headers[elem].lower() or "secure"  in r.headers[elem].lower()):
                     continue
-                print_error(f"[-] SECURITY SETTING:   {elem}: {r.headers[elem]}")
+                print_found(f"[+] SECURITY SETTING:   {elem}: {r.headers[elem]}")
                 
 
         # Other useful informations
@@ -130,7 +152,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
         subdomains.remove(domain)
         for subdom in sorted(subdomains):
-            print_found(f"[+] SUDOMAIN FOUND: {subdom}")
+            print_info(f"[ ] SUDOMAIN FOUND: {subdom}")
 
     else:
         print_error("[-] ERROR - COULD NOT GET SSL CERTIFICATE LIST")
@@ -141,11 +163,13 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     # Dirbuster for files and folders with OPTIONS request
     # display also allowed options
     ########################################################################################
-    
+
+
 
     ########################################################################################
     # Check headers for DAV and check if PUT or DELETE are allowed
     ########################################################################################
+
 
 
     ########################################################################################
