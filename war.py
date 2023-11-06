@@ -5,10 +5,29 @@ import requests
 from bs4 import BeautifulSoup
 from colorama import init, Fore, Style
 
+########################################################################################
+# CLI args processing
+########################################################################################
+
+# TODO: 
+# 1) Check of 2 arguments are given and print usage is not
+# 2) Check for -h or --help in arguments
+# 3) Set URL and WORDLIST to the according values
+# 4) Check if WORDLIST is readable and display error if not
+
 URL = "http://192.168.1.2"
 URL = "https://stackoverflow.com/"
 EXTS = "zip,bz2,tar,gz,tgz,tar.bz2,tar.gz,old,bak,inc,ini,xml,txt,yaml,yml,conf,cnf,config,json".split(",")
 WORDLIST = ""
+
+########################################################################################
+# Functions for output and logging
+########################################################################################
+
+def usage():
+    print("\nUSAGE:\n======\n")
+    print("war.py [URL] [WORDLIST]\n")
+    print("e.g.: war.py https://web.site /usr/share/waordlists/dirb/common.txt")
 
 def print_info(txt=""):
     global log_file
@@ -30,6 +49,7 @@ def print_error(txt):
     global Style
     print(f"{Fore.RED}{txt}{Style.RESET_ALL}")
     log_file.write(txt + "\n")
+
 
 ########################################################################################
 # Setup Requests session
@@ -80,11 +100,13 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
                 print_error(f"[-] SECURITY SETTING:   {elem}: {r.headers[elem]}")
                 
 
-        # Secure Settings
+        # Other useful informations
         for elem in info_headers:
             if header.lower() == elem.lower():
                 print_info(f"[ ] INFO:               {elem}: {r.headers[elem]}")
+    
     print_info()
+
 
     ########################################################################################
     # Get SSL cert subdomain list
@@ -119,7 +141,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     # Dirbuster for files and folders with OPTIONS request
     # display also allowed options
     ########################################################################################
-
+    
 
     ########################################################################################
     # Check headers for DAV and check if PUT or DELETE are allowed
