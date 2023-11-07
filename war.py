@@ -22,7 +22,8 @@ from colorama import init, Fore, Style
 
 URL = "http://192.168.1.2"
 #URL = "https://zonetransfer.me"
-EXTS = "zip,bz2,tar,gz,tgz,tar.bz2,tar.gz,old,bak,inc,ini,xml,txt,yaml,yml,conf,cnf,config,json".split(",")
+EXTS = "zip,bz2,tar,gz,tgz,tar.bz2,tar.gz,old,bak,inc,ini,xml,txt,yaml,yml,conf,cnf,config,json,local,pub,sql,mysql,pgsql,mdb,sqlite,sqlite2,sqlite3,db,mf,md,passwd,reg,readme,log,LOG,asa,asax,backend,wadl,1".split(",")
+CODE_EXTS = "php,html,htm,asp,py,pl,cgi,cfm".split(",")
 WORDLIST = ""
 
 # Read wordlist
@@ -75,6 +76,7 @@ session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)
 # LOG OUTPUT
 ########################################################################################
 domain = URL.split("/")[2].lower()
+schema = URL.split("//")[0].lower()
 subdomain_list = set()
 with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
@@ -169,7 +171,6 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     ########################################################################################
     # Banner grabbing - check for Server or other inform. desclosure - e.g.: PHP version
     ########################################################################################
-    """
     print_info("HTTP HEADER INFORMATION:")
     print_info("="*48)
     r = session.get(URL)
@@ -199,7 +200,6 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
                 print_info(f"[*] INFO:               {elem}: {r.headers[elem]}")
     
     print_info()
-    """
 
 
     ########################################################################################
@@ -243,7 +243,6 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     ########################################################################################
     # Using whatweb to get the techn. stack
     ########################################################################################
-    """
     print_info("WEB TECHNOLOGIES:")
     print_info("="*48)
 
@@ -290,12 +289,10 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
         print_error("[-] whatweb NOT INSTALLED")
 
     print_info()
-    """
 
     ########################################################################################
     # Check which subdomains have a webserver running
     ########################################################################################
-    """
     print_info("CHECKING SUBDOMAINS FOR RUNNING WEBSERVERS:")
     print_info("="*48)
 
@@ -319,7 +316,6 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
         subdomain_list.remove(f"www.{domain}")
 
     print_info()
-    """
 
 
     ########################################################################################
@@ -360,7 +356,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
         print_info(lines)
     except FileNotFoundError:
-        print_error("[-] wafw00f NOT INSTALLED")
+        print_error("[-] nmap NOT INSTALLED")
     
     print_info()
     """
@@ -369,16 +365,58 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     # Dirbuster for files and folders with OPTIONS request
     # display also allowed options
     ########################################################################################
-    
+    for subdom in subdomain_list:
+        base_url = f"{schema}//{subdom}/"
+
+        print_info(f"CHECKING FILES/FOLDERS IN {base_url}:")
+        print_info("="*48)
+
+        # Check folders
+        for word in wordlist:
+            url = f"{base_url}{word}"
+            r = session.head(url)
+            if r.status_code == 200:
+                r2 = session.options(url)
+                
+                # Listable directories
+                try:
+                    print_error(f"[-] FOUND: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
+                except KeyError:
+                    print_error(f"[-] FOUND: {url} [Status-Code: {r.status_code}]")
+
+            elif r.status_code != 404:
+                r2 = session.options(url)
+                try:
+                    # Check for PUT or DELETE method
+                    if "PUT" in r2.headers['Allow'] or "DELETE" in r2.headers['Allow']:
+                        print_error(f"[-] FOUND: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
+
+                    # All other HTTP-methods
+                    else:
+                        print_info(f"[*] FOUND: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
+
+                # No OPTIONS found in headers
+                except KeyError:
+                    print_info(f"[*] FOUND: {url} [Status-Code: {r.status_code}]")
 
 
-    ########################################################################################
-    # Check headers for DAV and check if PUT or DELETE are allowed
-    ########################################################################################
+            # Skip this files because ost servers will give you 403 for each file-extention
+            if word in [".hta", ".htaccess", ".htpasswd"]:
+                continue
 
 
+            # Check files
+            for ext in EXTS:
+                url = f"{base_url}{word}.{ext}"
+                r = session.head(url)
+                if r.status_code != 404:
+                    print_error(f"[-] FOUND: {url} [Status-Code: {r.status_code}]")
 
-    ########################################################################################
-    # Check all comments of a website
-    ########################################################################################
 
+            ########################################################################################
+            # Check all comments of a website
+            ########################################################################################
+            
+
+
+        print_info()
