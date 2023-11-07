@@ -1,5 +1,6 @@
 import re
 import whois
+import urllib3
 import requests
 import subprocess
 
@@ -20,9 +21,13 @@ from colorama import init, Fore, Style
 # 4) Check if WORDLIST is readable and display error if not
 
 URL = "http://192.168.1.2"
-URL = "https://happy-sailors.com"
+URL = "https://zonetransfer.me"
 EXTS = "zip,bz2,tar,gz,tgz,tar.bz2,tar.gz,old,bak,inc,ini,xml,txt,yaml,yml,conf,cnf,config,json".split(",")
 WORDLIST = ""
+
+# Read wordlist
+with open("../WebsiteRecon/common.txt", "r") as f:
+    wordlist = f.read().split("\n")
 
 ########################################################################################
 # Functions for output and logging
@@ -66,6 +71,7 @@ session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)
 # LOG OUTPUT
 ########################################################################################
 domain = URL.split("/")[2].lower()
+subdomain_list = set()
 with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
     ########################################################################################
@@ -148,6 +154,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
                 zone = dns.zone.from_xfr(dns.query.xfr(str(ip), domain))
                 for host in zone:
                     print_error(f"[-] FOUND HOST: {host}.{domain}")
+                    subdomain_list.add(f"{host}.{domain}")
 
             except Exception as e:
                 print_found(f"[+] NS {server} REFUSED ZONE TRANSFER")
@@ -219,15 +226,20 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
         for subdom in sorted(subdomains):
             print_info(f"[*] SUDOMAIN FOUND: {subdom}")
+            if "*" not in subdom:
+                subdomain_list.add(subdom)
 
     else:
         print_error("[-] ERROR - COULD NOT GET SSL CERTIFICATE LIST")
+    
+    print_info()
     """
 
 
     ########################################################################################
     # Using whatweb to get the techn. stack
     ########################################################################################
+    """
     print_info("WEB TECHNOLOGIES:")
     print_info("="*48)
 
@@ -275,13 +287,43 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
         print_error("[-] whatweb NOT INSTALLED")
 
     print_info()
+    """
+
+    ########################################################################################
+    # Check which subdomains have a webserver running
+    ########################################################################################
+    """
+    print_info("CHECKING SUBDOMAINS FOR RUNNING WEBSERVERS:")
+    print_info("="*48)
+
+    no_http = []
+    for subdom in subdomain_list:
+        url = f"http://{subdom}"
+        try:
+            r = requests.get(url, timeout=3)
+            print_info(f"[*] WEBSERVER FOUND: {url} [Status-Code: {r.status_code}]")
+        except (requests.exceptions.ConnectionError, requests.exceptions.InvalidURL) as e:
+            no_http.append(subdom)
+
+    # clean list
+    for subdom in no_http:
+        subdomain_list.remove(subdom)
+    
+    # Prepare list for next step
+    del(no_http)
+    subdomain_list = [domain,] + list(sorted(subdomain_list))
+    if f"www.{domain}" in subdomain_list:
+        subdomain_list.remove(f"www.{domain}")
+
+    print_info()
+    """
 
 
     ########################################################################################
     # Dirbuster for files and folders with OPTIONS request
     # display also allowed options
     ########################################################################################
-
+    print(subdomain_list)
 
 
     ########################################################################################
