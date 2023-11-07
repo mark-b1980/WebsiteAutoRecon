@@ -12,33 +12,15 @@ from bs4 import BeautifulSoup
 from colorama import init, Fore, Style
 
 ########################################################################################
-# CLI args processing
-########################################################################################
-
-# TODO: 
-# 1) Check of 2 arguments are given and print usage if not
-# 2) Check for -h or --help in arguments
-# 3) Set URL and WORDLIST to the according values
-# 4) Check if WORDLIST is readable and display error if not
-
-URL = "http://192.168.1.2"
-#URL = "https://zonetransfer.me"
-EXTS = "zip,bz2,tar,gz,tgz,tar.bz2,tar.gz,old,bak,inc,ini,xml,txt,yaml,yml,conf,cnf,config,json,local,pub,sql,mysql,pgsql,mdb,sqlite,sqlite2,sqlite3,db,mf,md,passwd,reg,readme,log,LOG,asa,asax,backend,wadl,1".split(",")
-CODE_EXTS = "php,html,htm,asp,py,pl,cgi,cfm".split(",")
-WORDLIST = ""
-
-# Read wordlist
-with open("../WebsiteRecon/common.txt", "r") as f:
-    wordlist = f.read().split("\n")
-
-########################################################################################
 # Functions for output and logging
 ########################################################################################
 
 def usage():
-    print("\nUSAGE:\n======\n")
+    print("\nUSAGE:")
+    print("=======================")
     print("war.py [URL] [WORDLIST]\n")
-    print("e.g.: war.py https://web.site /usr/share/waordlists/dirb/common.txt")
+    print("e.g.: \nwar.py https://web.site /usr/share/wordlists/dirb/common.txt\n")
+    quit()
 
 def print_info(txt=""):
     global log_file
@@ -67,6 +49,40 @@ def ansi_escape(txt):
 
 
 ########################################################################################
+# CLI args processing
+########################################################################################
+
+# Check of 2 arguments are given and print usage if not
+# Check for -h or --help in arguments
+if len(sys.argv) != 3 or "-h" in sys.argv or "--help" in sys.argv:
+    usage()
+
+
+# Set URL and WORDLIST to the according values
+URL = sys.argv[1]
+WORDLIST = sys.argv[2]
+
+# Testing values
+#URL = "http://192.168.1.2"
+#WORDLIST = "common.txt"
+
+
+# Check if WORDLIST is readable and display error if not
+try:
+    # Read wordlist
+    with open(WORDLIST, "r") as f:
+        wordlist = f.read().split("\n")
+        
+except Exception as e:
+    print(e)
+    quit()
+
+
+EXTS = "zip,bz2,tar,gz,tgz,tar.bz2,tar.gz,old,bak,inc,ini,xml,txt,yaml,yml,conf,cnf,config,json,local,pub,sql,mysql,pgsql,mdb,sqlite,sqlite2,sqlite3,db,mf,md,passwd,reg,readme,log,LOG,asa,asax,backend,wadl,1".split(",")
+CODE_EXTS = "php,html,htm,asp,py,pl,cgi,cfm".split(",")
+
+
+########################################################################################
 # Setup Requests session
 ########################################################################################
 session = requests.Session()
@@ -84,7 +100,6 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     ########################################################################################
     # WHOIS
     ########################################################################################
-    """
     print_info("WHOIS:")
     print_info("="*48)
 
@@ -113,13 +128,11 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
     print_info(out)
     print_info()
-    """
 
 
     ########################################################################################
     # Get DNS data
     ########################################################################################
-    """
     print_info("DNS:")
     print_info("="*48)
     entries = ["A", "A6", "AAAA", "AFSDB", "ANY", "APL", "AXFR", "CAA", "CDNSKEY", "CDS", "CERT", "CNAME", "CSYNC", "DHCID", "DLV", "DNAME", "DNSKEY", "DS", "EUI48", "EUI64", "GPOS", "HINFO", "HIP", "IPSECKEY", "ISDN", "IXFR", "KEY", "KX", "LOC", "MAILA", "MAILB", "MB", "MD", "MF", "MG", "MINFO", "MR", "MX", "NAPTR", "NONE", "NS", "NSAP", "NSAP-PTR", "NSEC", "NSEC3", "NSEC3PARAM", "NULL", "NXT", "OPT", "PTR", "PX", "RP", "RRSIG", "RT", "SIG", "SOA", "SPF", "SRV", "SSHFP", "TA", "TKEY", "TLSA", "TSIG", "TXT", "UNSPEC", "URI", "WKS", "X25"]
@@ -140,13 +153,11 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
             print_info()
     
     print_info()
-    """
     
 
     ########################################################################################
     # Get DNS zonetransfer
     ########################################################################################
-    """
     print_info("DNS ZONETRANSFER:")
     print_info("="*48)
 
@@ -166,7 +177,6 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
             except Exception as e:
                 print_found(f"[+] NS {server} REFUSED ZONE TRANSFER")
                 continue
-    """
 
 
     ########################################################################################
@@ -206,7 +216,6 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     ########################################################################################
     # Get SSL cert subdomain list
     ########################################################################################
-    """
     print_info("SUBDOMAINS:")
     print_info("="*48)
 
@@ -238,7 +247,6 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
         print_error("[-] ERROR - COULD NOT GET SSL CERTIFICATE LIST")
     
     print_info()
-    """
 
 
     ########################################################################################
@@ -326,7 +334,6 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     ########################################################################################
     # Utilize wafw00f
     ########################################################################################
-    """
     print_info("WAFW00F:")
     print_info("="*48)
     
@@ -342,13 +349,11 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
         print_error("[-] wafw00f NOT INSTALLED")
     
     print_info()
-    """
 
 
     ########################################################################################
     # Utilize nmap
     ########################################################################################
-    """
     print_info("NMAP:")
     print_info("="*48)
     
@@ -364,17 +369,15 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
         print_error("[-] nmap NOT INSTALLED")
     
     print_info()
-    """
 
     ########################################################################################
     # Dirbuster for files and folders with OPTIONS request
     # display also allowed options
     ########################################################################################
-    for subdom in subdomain_list:
-        base_url = f"{schema}//{subdom}/"
-
-        print_info(f"CHECKING FILES/FOLDERS IN {base_url}:")
-        print_info("="*48)
+    def dirb(base_url, indent=0):
+        global wordlist
+        global EXTS
+        global CODE_EXTS
 
         # Check folders
         for word in wordlist:
@@ -388,29 +391,32 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
                 
                 # Listable directories
                 try:
-                    print_error(f"[-] FOUND: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
+                    print_error(" "*indent + f"[-] FOUND FOLDER: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
                 except KeyError:
-                    print_error(f"[-] FOUND: {url} [Status-Code: {r.status_code}]")
+                    print_error(" "*indent + f"[-] FOUND FOLDER: {url} [Status-Code: {r.status_code}]")
 
             elif r.status_code != 404:
                 r2 = session.options(url)
                 try:
                     # Check for PUT or DELETE method
                     if "PUT" in r2.headers['Allow'] or "DELETE" in r2.headers['Allow']:
-                        print_error(f"[-] FOUND: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
+                        print_error(" "*indent + f"[-] FOUND FOLDER: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
 
                     # All other HTTP-methods
                     else:
-                        print_info(f"[*] FOUND: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
+                        print_info(" "*indent + f"[*] FOUND FOLDER: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
 
                 # No OPTIONS found in headers
                 except KeyError:
-                    print_info(f"[*] FOUND: {url} [Status-Code: {r.status_code}]")
+                    print_info(" "*indent + f"[*] FOUND FOLDER: {url} [Status-Code: {r.status_code}]")
+                
+                # Skip this files because most servers will give you 403 for each file-extention
+                if word in [".hta", ".htaccess", ".htpasswd"]:
+                    continue
 
-
-            # Skip this files because ost servers will give you 403 for each file-extention
-            if word in [".hta", ".htaccess", ".htpasswd"]:
-                continue
+                # Check subfolder
+                if word != "":
+                    dirb(f"{base_url}{word}/", indent=indent+4)
 
 
             # Check files that could leak information
@@ -418,7 +424,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
                 url = f"{base_url}{word}.{ext}"
                 r = session.head(url)
                 if r.status_code != 404:
-                    print_error(f"[-] FOUND: {url} [Status-Code: {r.status_code}]")
+                    print_error(" "*indent + f"[-] FOUND FILE:   {url} [Status-Code: {r.status_code}]")
 
 
             ########################################################################################
@@ -428,14 +434,24 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
                 url = f"{base_url}{word}.{ext}"
                 r = session.get(url)
                 if r.status_code == 200:
-                    print_info(f"[*] FOUND: {url} [Status-Code: {r.status_code}]")
+                    print_info(" "*indent + f"[*] FOUND FILE:   {url} [Status-Code: {r.status_code}]")
                     
                     # Parse HTML and find comments
                     soup = BeautifulSoup(r.text, 'html.parser')
                     comments = soup.find_all(string=lambda text: isinstance(text, Comment))
                     for c in comments:
                         for line in c.split("\n"):
-                            print_error(f"    Comment: {line.strip()}")
+                            print_error(" "*indent + f"    Comment: {line.strip()}")
 
         print(" "*60, end="\r") # Clear last checking output
+
+    # Run check
+    for subdom in subdomain_list:
+        base_url = f"{schema}//{subdom}/"
+
+        print_info(f"CHECKING FILES/FOLDERS IN {base_url}:")
+        print_info("="*48)
+
+        dirb(base_url)
+        
         print_info()
