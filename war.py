@@ -21,7 +21,7 @@ from colorama import init, Fore, Style
 # 4) Check if WORDLIST is readable and display error if not
 
 URL = "http://192.168.1.2"
-URL = "https://zonetransfer.me"
+#URL = "https://zonetransfer.me"
 EXTS = "zip,bz2,tar,gz,tgz,tar.bz2,tar.gz,old,bak,inc,ini,xml,txt,yaml,yml,conf,cnf,config,json".split(",")
 WORDLIST = ""
 
@@ -58,6 +58,10 @@ def print_error(txt):
     global Style
     print(f"{Fore.RED}{txt}{Style.RESET_ALL}")
     log_file.write(txt + "\n")
+
+def ansi_escape(txt):
+    ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    return ansi_escape.sub('', txt)
 
 
 ########################################################################################
@@ -260,8 +264,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
         lines = "\n".join(lines)
 
         # Remove color informations
-        ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
-        lines = ansi_escape.sub('', lines)
+        lines = ansi_escape(lines)
 
         # Format output
         lines = lines.split(", ")
@@ -320,10 +323,53 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
 
     ########################################################################################
+    # Utilize wafw00f
+    ########################################################################################
+    """
+    print_info("WAFW00F:")
+    print_info("="*48)
+    
+    try:
+        res = subprocess.check_output(["wafw00f", "-a", domain], stderr=subprocess.STDOUT)
+        lines = res.decode("UTF-8")
+
+        # Remove color informations
+        lines = ansi_escape(lines)
+
+        print_info(lines)
+    except FileNotFoundError:
+        print_error("[-] wafw00f NOT INSTALLED")
+    
+    print_info()
+    """
+
+
+    ########################################################################################
+    # Utilize nmap
+    ########################################################################################
+    """
+    print_info("NMAP:")
+    print_info("="*48)
+    
+    try:
+        res = subprocess.check_output(["nmap", "-sV", "-sC", domain], stderr=subprocess.STDOUT)
+        lines = res.decode("UTF-8")
+
+        # Remove color informations
+        lines = ansi_escape(lines)
+
+        print_info(lines)
+    except FileNotFoundError:
+        print_error("[-] wafw00f NOT INSTALLED")
+    
+    print_info()
+    """
+
+    ########################################################################################
     # Dirbuster for files and folders with OPTIONS request
     # display also allowed options
     ########################################################################################
-    print(subdomain_list)
+    
 
 
     ########################################################################################
