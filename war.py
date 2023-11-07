@@ -72,7 +72,7 @@ try:
     # Read wordlist
     with open(WORDLIST, "r") as f:
         wordlist = f.read().split("\n")
-        
+
 except Exception as e:
     print(e)
     quit()
@@ -369,6 +369,23 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
         print_error("[-] nmap NOT INSTALLED")
     
     print_info()
+
+
+    ########################################################################################
+    # Output robots.txt
+    ########################################################################################
+    print_info("ROBOTS.TXT:")
+    print_info("="*48)
+    
+    try:
+        url = f"{schema}//{domain}/robots.txt"
+        r = session.get(url)
+        print_info(r.text)
+    except:
+        print_info("[*] robots.txt NOT FOUND")
+    
+    print_info()
+
 
     ########################################################################################
     # Dirbuster for files and folders with OPTIONS request
