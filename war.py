@@ -1,12 +1,13 @@
 import re
+import sys
 import whois
-import urllib3
 import requests
 import subprocess
 
 import dns.zone
 import dns.resolver
 
+from bs4 import Comment
 from bs4 import BeautifulSoup
 from colorama import init, Fore, Style
 
@@ -298,6 +299,9 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
     no_http = []
     for subdom in subdomain_list:
+        print(f"Checking: {subdom:48}", end="\r")
+        sys.stdout.flush()
+
         url = f"http://{subdom}"
         try:
             r = requests.get(url, timeout=3)
@@ -315,6 +319,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     if f"www.{domain}" in subdomain_list:
         subdomain_list.remove(f"www.{domain}")
 
+    print(" "*60, end="\r") # Clear last checking output
     print_info()
 
 
@@ -373,6 +378,9 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
         # Check folders
         for word in wordlist:
+            print(f"Checking: {word:48}", end="\r")
+            sys.stdout.flush()
+
             url = f"{base_url}{word}"
             r = session.head(url)
             if r.status_code == 200:
@@ -405,7 +413,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
                 continue
 
 
-            # Check files
+            # Check files that could leak information
             for ext in EXTS:
                 url = f"{base_url}{word}.{ext}"
                 r = session.head(url)
@@ -414,9 +422,20 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
 
             ########################################################################################
-            # Check all comments of a website
+            # Check all HTML comments of a website
             ########################################################################################
-            
+            for ext in CODE_EXTS:
+                url = f"{base_url}{word}.{ext}"
+                r = session.get(url)
+                if r.status_code == 200:
+                    print_info(f"[*] FOUND: {url} [Status-Code: {r.status_code}]")
+                    
+                    # Parse HTML and find comments
+                    soup = BeautifulSoup(r.text, 'html.parser')
+                    comments = soup.find_all(string=lambda text: isinstance(text, Comment))
+                    for c in comments:
+                        for line in c.split("\n"):
+                            print_error(f"    Comment: {line.strip()}")
 
-
+        print(" "*60, end="\r") # Clear last checking output
         print_info()
