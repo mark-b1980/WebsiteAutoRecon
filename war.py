@@ -18,7 +18,7 @@ from colorama import init, Fore, Style
 def usage():
     print("\nUSAGE:")
     print("=======================")
-    print("war.py [URL] [WORDLIST]\n")
+    print("war.py [URL] [DIR/FILE WORDLIST] [DNS WORDLIST]\n")
     print("e.g.: \nwar.py https://web.site /usr/share/wordlists/dirb/common.txt\n")
     quit()
 
@@ -52,26 +52,37 @@ def ansi_escape(txt):
 # CLI args processing
 ########################################################################################
 
-# Check of 2 arguments are given and print usage if not
+# Check if 3 arguments are given and print usage if not
 # Check for -h or --help in arguments
-if len(sys.argv) != 3 or "-h" in sys.argv or "--help" in sys.argv:
+if len(sys.argv) != 4 or "-h" in sys.argv or "--help" in sys.argv:
     usage()
 
 
 # Set URL and WORDLIST to the according values
 URL = sys.argv[1]
 WORDLIST = sys.argv[2]
+DNS_WORDLIST = sys.argv[3]
 
 # Testing values
 #URL = "http://192.168.1.2"
 #WORDLIST = "common.txt"
+#DNS_WORDLIST = "dns.txt"
 
 
-# Check if WORDLIST is readable and display error if not
+# Check if wordlists are readable and display error if not
 try:
     # Read wordlist
     with open(WORDLIST, "r") as f:
         wordlist = f.read().split("\n")
+
+except Exception as e:
+    print(e)
+    quit()
+
+try:
+    # Read DNS wordlist
+    with open(DNS_WORDLIST, "r") as f:
+        dns_wordlist = f.read().split("\n")
 
 except Exception as e:
     print(e)
@@ -144,7 +155,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
             for rdata in answers:
                 found = True
                 key = entry + ":"
-                print_info(f"{key:15} {rdata.to_text()}")
+                print_info(f"[*] FOUND IP: {key:15} {rdata.to_text()}")
     
         except Exception as e:
             pass
@@ -177,6 +188,35 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
             except Exception as e:
                 print_found(f"[+] NS {server} REFUSED ZONE TRANSFER")
                 continue
+
+    print_info()
+
+    
+    ########################################################################################
+    # Bruteforce DNS names
+    ########################################################################################
+    print_info("DNS BRUTEFORCE:")
+    print_info("="*48)
+    entries = ["A", "AAAA"]
+
+    for entry in entries:
+        for host in dns_wordlist:
+            subdom = f"{host}.{domain}"
+            print(f"Checking: {subdom:48}", end="\r")
+            sys.stdout.flush()
+
+            try:
+                answers = dns.resolver.query(subdom, entry)
+                for rdata in answers:
+                    key = entry + ":"
+                    print_info(f"[*] FOUND IP: {rdata.to_text()} [{subdom}]")
+                    subdomain_list.add(f"{subdom}")
+        
+            except Exception as e:
+                pass
+        
+    print(" "*60, end="\r") # Clear last checking output
+    print_info()
 
 
     ########################################################################################
