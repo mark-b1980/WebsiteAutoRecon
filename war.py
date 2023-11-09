@@ -172,6 +172,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     print_info("DNS ZONETRANSFER:")
     print_info("="*48)
 
+    zonetransfer_failed = True
     ns_servers = []
     ns_answer = dns.resolver.query(domain, 'NS')
     for server in ns_answer:
@@ -184,6 +185,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
                 for host in zone:
                     print_error(f"[-] FOUND HOST: {host}.{domain}")
                     subdomain_list.add(f"{host}.{domain}")
+                    zonetransfer_failed = False
 
             except Exception as e:
                 print_found(f"[+] NS {server} REFUSED ZONE TRANSFER")
@@ -195,28 +197,29 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     ########################################################################################
     # Bruteforce DNS names
     ########################################################################################
-    print_info("DNS BRUTEFORCE:")
-    print_info("="*48)
-    entries = ["A", "AAAA"]
+    if zonetransfer_failed:
+        print_info("DNS BRUTEFORCE:")
+        print_info("="*48)
+        entries = ["A", "AAAA"]
 
-    for entry in entries:
-        for host in dns_wordlist:
-            subdom = f"{host}.{domain}"
-            print(f"Checking: {subdom:48}", end="\r")
-            sys.stdout.flush()
+        for entry in entries:
+            for host in dns_wordlist:
+                subdom = f"{host}.{domain}"
+                print(f"Checking: {subdom:48}", end="\r")
+                sys.stdout.flush()
 
-            try:
-                answers = dns.resolver.query(subdom, entry)
-                for rdata in answers:
-                    key = entry + ":"
-                    print_info(f"[*] FOUND IP: {rdata.to_text()} [{subdom}]")
-                    subdomain_list.add(f"{subdom}")
-        
-            except Exception as e:
-                pass
-        
-    print(" "*60, end="\r") # Clear last checking output
-    print_info()
+                try:
+                    answers = dns.resolver.query(subdom, entry)
+                    for rdata in answers:
+                        key = entry + ":"
+                        print_info(f"[*] FOUND IP: {rdata.to_text()} [{subdom}]")
+                        subdomain_list.add(f"{subdom}")
+            
+                except Exception as e:
+                    pass
+            
+        print(" "*60, end="\r") # Clear last checking output
+        print_info()
 
 
     ########################################################################################
@@ -228,7 +231,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     for header in r.headers.keys():
         inform_disc_headers = ["Server", "Set-Cookie", "X-Powered-By"]
         sec_headers = ["Strict-Transport-Security", "Cache-Control", "Set-Cookie", "Content-Security-Policy"]
-        info_headers = ["Content-Type", "Transfer-Encoding", "Content-Encoding"]
+        info_headers = ["Content-Type", "Transfer-Encoding", "Content-Encoding", "X-XSS-Protection"]
 
         # Information Disclosure
         for elem in inform_disc_headers:
