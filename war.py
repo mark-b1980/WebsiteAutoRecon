@@ -475,10 +475,6 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
                 # No OPTIONS found in headers
                 except KeyError:
                     print_info(" "*indent + f"[*] FOUND FOLDER: {url} [Status-Code: {r.status_code}]")
-                
-                # Skip this files because most servers will give you 403 for each file-extention
-                if word in [".hta", ".htaccess", ".htpasswd"]:
-                    continue
 
                 # Check subfolder
                 if word != "":
@@ -489,6 +485,13 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
             for ext in EXTS:
                 url = f"{base_url}{word}.{ext}"
                 r = session.head(url)
+                
+                # Skip .hta.*, .htaccess.*, .htpasswd.* because most servers will give you a 
+                # 403 error for each file-extention in combination with this 3 filenames
+                if r.status_code == 403 and word in [".hta", ".htaccess", ".htpasswd"]:
+                    continue
+
+                # If response is not "file not found error" show found file
                 if r.status_code != 404:
                     print_error(" "*indent + f"[-] FOUND FILE:   {url} [Status-Code: {r.status_code}]")
 
