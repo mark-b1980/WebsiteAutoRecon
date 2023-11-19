@@ -457,14 +457,20 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
 
             elif r.status_code != 404:
                 r2 = session.options(url)
+                # Check for WebDAV
+                wd = ""
+                if "DAV" in r2.headers.keys():
+                    wd = f", WebDAV: {r.headers['DAV']}"
+
+                # Check other HTTP methods
                 try:
                     # Check for PUT or DELETE method
                     if "PUT" in r2.headers['Allow'] or "DELETE" in r2.headers['Allow']:
-                        print_error(" "*indent + f"[-] FOUND FOLDER: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
+                        print_error(" "*indent + f"[-] FOUND FOLDER: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}{wd}]")
 
                     # All other HTTP-methods
                     else:
-                        print_info(" "*indent + f"[*] FOUND FOLDER: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}]")
+                        print_info(" "*indent + f"[*] FOUND FOLDER: {url} [Status-Code: {r.status_code}] [Allow: {r2.headers['Allow']}{wd}]")
 
                 # No OPTIONS found in headers
                 except KeyError:
