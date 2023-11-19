@@ -1,4 +1,4 @@
-# Website auto recon
+# Webapp auto recon
 
 Automated script performing various reconnisance tasks for a webapplication pentest.
 

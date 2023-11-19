@@ -12,6 +12,23 @@ from bs4 import BeautifulSoup
 from colorama import init, Fore, Style
 
 ########################################################################################
+# ASCII Art
+########################################################################################
+
+print(f"""
+{Fore.RED}                                                                                  
+ (  (             )                                  )                            
+ )\))(   '  (  ( /(     )                  )   (  ( /(      (     (               
+((_)()\ )  ))\ )\()) ( /( `  )  `  )    ( /(  ))\ )\())(    )(   ))\ (  (   (     
+{Style.RESET_ALL}{Fore.YELLOW}_{Style.RESET_ALL}{Fore.RED}(())\_)()/((_{Style.RESET_ALL}{Fore.YELLOW}|{Style.RESET_ALL}{Fore.RED}(_)\  )(_))/(/(  /(/(    )(_))/((_{Style.RESET_ALL}{Fore.YELLOW}|{Style.RESET_ALL}{Fore.RED}_))/ )\  (()\ /((_))\ )\  )\ )  
+{Style.RESET_ALL}{Fore.YELLOW}\ \{Style.RESET_ALL}{Fore.RED}((_){Style.RESET_ALL}{Fore.YELLOW}/ {Style.RESET_ALL}{Fore.RED}(_)) {Style.RESET_ALL}{Fore.YELLOW}| |{Style.RESET_ALL}{Fore.RED}(_)((_)_((_)_\((_)_\  ((_)_(_))({Style.RESET_ALL}{Fore.YELLOW}| |{Style.RESET_ALL}{Fore.RED}_ ((_)  ((_|_)) ((_|(_)_(_/(  
+{Style.RESET_ALL}{Fore.YELLOW} \ \/\/ // -_)| '_ \/ _` | '_ \) '_ \) / _` | || |  _/ _ \ | '_/ -_) _/ _ \ ' \{Style.RESET_ALL}{Fore.RED})) 
+{Style.RESET_ALL}{Fore.YELLOW}  \_/\_/ \___||_.__/\__,_| .__/| .__/  \__,_|\_,_|\__\___/ |_| \___\__\___/_||_|  
+                         | |   | |                                                
+                         |_|   |_|{Style.RESET_ALL}                                          v1.1      
+""")
+
+########################################################################################
 # Functions for output and logging
 ########################################################################################
 
