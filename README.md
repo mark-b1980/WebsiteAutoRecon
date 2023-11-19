@@ -11,5 +11,5 @@ war.py [URL] [DIR/FILE WORDLIST] [DNS WORDLIST]
 e.g.:
 
 ```
-war.py https://web.site /usr/share/wordlists/dirb/common.txt
+war.py https://web.site /usr/share/wordlists/dirb/common.txt /usr/share/wordlists/dns.txt
 ```
