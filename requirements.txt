@@ -1,2 +1,5 @@
 python-whois
 requests
+colorama
+bs4
+dns

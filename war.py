@@ -360,7 +360,7 @@ with open(f"{domain}.log", "w", encoding="UTF-8") as log_file:
     print_info()
 
     ########################################################################################
-    # Check which subdomains have a webserver running
+    # Check which subdomains have the webserver running
     ########################################################################################
     print_info("CHECKING SUBDOMAINS FOR RUNNING WEBSERVERS:")
     print_info("="*48)
