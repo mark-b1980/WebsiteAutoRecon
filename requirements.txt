@@ -3,3 +3,4 @@ requests
 colorama
 bs4
 dns
+urllib3>=2.6.3 # not directly required, pinned by Snyk to avoid a vulnerability
